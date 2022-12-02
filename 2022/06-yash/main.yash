@@ -1,0 +1,19 @@
+# Day 6: Yash, yet another shell https://yash.osdn.jp
+# Nothing else on the letter Y...
+# Slow but does the job 😄
+
+solve() {
+  data=$1
+  length=$2
+  for ((n=0; n<=${#data}; n++)); do
+    sub=$(echo ${data:n:length} | fold -w1 | sort | uniq -u | wc -l | xargs)
+    [ $sub == "$length" ] && echo $(($n + $length)) && break
+  done
+}
+
+data=$(</dev/stdin)
+
+echo -n "A: "
+solve $data 4
+echo -n "B: "
+solve $data 14

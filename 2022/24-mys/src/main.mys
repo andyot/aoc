@@ -1,0 +1,103 @@
+from os.path import Path
+
+func parse(grid: [string]) -> ({(i64, i64, i64, i64)}, i64, i64):
+    blizzards: {(i64, i64, i64, i64)}  = {}
+    for y, row in enumerate(grid):
+        for x, v in enumerate(row):
+            match v:
+                case '>': blizzards.add((x, y, 1, 0))
+                case '^': blizzards.add((x, y, 0, -1))
+                case '<': blizzards.add((x, y, -1, 0))
+                case 'v': blizzards.add((x, y, 0, 1))
+
+    width = grid[0].length()
+    height = grid.length()
+
+    return blizzards, width, height
+
+
+class Context:
+    initial_blizzards: {(i64, i64, i64, i64)}
+    width: i64
+    height: i64
+    cache: {i64: {(i64, i64)}}
+
+
+func mod(a: i64, b: i64) -> i64:
+    r = a % b
+    return r + b if r < 0 else r
+
+
+func blizzards_at(time: i64, ctx: Context) -> {(i64, i64)}:
+    if time in ctx.cache:
+        return ctx.cache[time]
+    blizzards: {(i64, i64)} = {}
+    for ib in ctx.initial_blizzards:
+        x, y, dx, dy = ib
+        nx = mod(x + (dx * time), ctx.width)
+        ny = mod(y + (dy * time), ctx.height)
+        blizzards.add((nx, ny))
+    ctx.cache[time] = blizzards
+    return blizzards
+
+
+func safe(pos: (i64, i64), time: i64, ctx: Context) -> [(i64, i64)]:
+    blizzards = blizzards_at(time, ctx)
+    x, y = pos
+    safe_positions: [(i64, i64)] = []
+    for dx, dy in [(1, 0), (0, 1), (-1, 0), (0, -1), (0, 0)]:
+        p = (x + dx, y + dy)
+        if p not in blizzards and in_bounds(pos, ctx.width, ctx.height):
+            safe_positions.append(p)
+    return safe_positions
+
+
+func in_bounds(pos: (i64, i64), width: i64, height: i64) -> bool:
+    x, y = pos
+    return 0 <= x and x < width and 0 <= y and y < height
+
+
+func bfs(start: (i64, i64), goal: (i64, i64), start_time: i64, ctx: Context) -> i64:
+    queue: [((i64, i64), i64)] = []
+    visited: {((i64, i64), i64)} = {}
+
+    while start in blizzards_at(start_time, ctx):
+        start_time += 1
+
+    queue.append((start, start_time))
+
+    while queue.length() > 0:
+        pos, time = queue.pop(0)
+        if pos == goal:
+            return time + 1
+
+        if (pos, time) not in visited:
+            visited.add((pos, time))
+            for w in safe(pos, time + 1, ctx):
+                queue.append((w, time + 1))
+
+        if queue.length() == 0:
+            queue.append((pos, time + 1))
+
+    raise UnreachableError()
+
+
+
+func main():
+    input = Path(f"{__assets__}/input.txt").read_text().split("\n")[1:-1]
+    grid = [line[1:-1] for line in input]
+
+    initial_blizzards, width, height = parse(grid)
+
+    cache: {i64: {(i64, i64)}} = {}
+    ctx = Context(initial_blizzards, width, height, cache)
+    
+    start = (0, 0)
+    end = (width - 1, height - 1)
+    
+    print("A: ", bfs(start, end, 0, ctx))
+    
+    t = bfs(start, end, 0, ctx)
+    t = bfs(end, start, t + 1, ctx)
+    t = bfs(start, end, t + 1, ctx)
+    print("B: ", t)

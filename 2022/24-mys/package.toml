@@ -1,0 +1,9 @@
+[package]
+name = "aoc"
+version = "0.1.0"
+authors = ["Andy Truong <7272553+andyot@users.noreply.github.com>"]
+description = "Add a short package description here."
+
+[dependencies]
+os = "latest"
+string = "latest"

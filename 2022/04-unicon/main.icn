@@ -1,0 +1,44 @@
+# Day 4: Unicon http://unicon.org
+
+procedure main() 
+  a := 0
+  b := 0
+
+  pairs := read_lines("input.txt")
+  every pair := !pairs do {
+    ranges := split(pair, ",")
+    first := split(ranges[1], "-")
+    second := split(ranges[2], "-")
+    f1 := +first[1]; f2 := +first[2]
+    s1 := +second[1]; s2 := +second[2]
+  
+    if (f1 >= s1 & f2 <= s2) |
+       (s1 >= f1 & s2 <= f2) then  
+      a +:= 1
+
+    if max(f1, s1) <= min(f2, s2) then
+      b +:= 1
+  }
+  write("A: ", a)
+  write("B: ", b)
+end
+
+
+# Utilities
+
+procedure read_lines(file)
+  f := open(file) | fail
+  lines := []
+  every put(lines, !f)
+  close(f)
+  return lines
+end
+
+procedure split(line, delimiter)
+  r := []
+  line ? repeat {
+    tab(upto(~delimiter))
+    put(r, tab(many(~delimiter))) | break
+  }
+  return r
+end
